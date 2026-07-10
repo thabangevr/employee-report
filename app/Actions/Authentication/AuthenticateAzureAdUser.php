@@ -17,7 +17,8 @@ class AuthenticateAzureAdUser
 
     public function execute(AzureAdUserData $data): User
     {
-        $user = $this->userRepository->findByAzureAdId($data->azureAdId);
+        $user = $this->userRepository->findByAzureAdId($data->azureAdId)
+            ?? $this->userRepository->findByEmail($data->email);
 
         $attributes = $data->toArray();
 
