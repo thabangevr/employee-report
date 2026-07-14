@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Okr;
 
+use App\DTOs\Okr\CreateOkrData;
 use App\Models\Okr;
 use App\Repositories\Contracts\OkrRepositoryInterface;
 
@@ -13,13 +14,19 @@ class CreateOkr
         private readonly OkrRepositoryInterface $okrRepository,
     ) {}
 
-    public function execute(int $userId, string $title): Okr
+    public function execute(CreateOkrData $data): Okr
     {
         /** @var Okr */
-        return $this->okrRepository->create([
-            'user_id' => $userId,
-            'title' => $title,
-            'is_active' => true,
-        ]);
+        $okr = $this->okrRepository->create($data->toArray());
+
+        foreach ($data->keyResults as $index => $keyResult) {
+            $okr->keyResults()->create([
+                'type' => $keyResult['type'],
+                'description' => $keyResult['description'],
+                'sort_order' => $index,
+            ]);
+        }
+
+        return $okr->load('keyResults');
     }
 }

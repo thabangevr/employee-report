@@ -6,7 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Actions\Okr\CreateOkr;
 use App\Actions\Okr\DeleteOkr;
+use App\Actions\Okr\ToggleOkrActive;
 use App\Actions\Okr\UpdateOkr;
+use App\DTOs\Okr\CreateOkrData;
+use App\DTOs\Okr\UpdateOkrData;
 use App\Http\Requests\StoreOkrRequest;
 use App\Http\Requests\UpdateOkrRequest;
 use App\Models\Okr;
@@ -24,36 +27,69 @@ class OkrController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        $okrs = $this->okrRepository->findAllBy('user_id', $user->id);
+        $okrs = $this->okrRepository->findAllByUserWithKeyResults($user->id);
 
-        return view('okrs.index', compact('okrs'));
+        $activeOkrs = $okrs->where('is_active', true);
+        $inactiveOkrs = $okrs->where('is_active', false);
+        $totalWeight = $activeOkrs->sum('weight');
+
+        return view('okrs.index', compact('okrs', 'activeOkrs', 'inactiveOkrs', 'totalWeight'));
+    }
+
+    public function create(): View
+    {
+        return view('okrs.create');
     }
 
     public function store(StoreOkrRequest $request, CreateOkr $action): RedirectResponse
     {
-        $action->execute($request->user()->id, $request->validated('title'));
+        $data = CreateOkrData::fromRequest($request);
+        $action->execute($data);
 
         return redirect()
             ->route('okrs.index')
-            ->with('success', 'OKR added.');
+            ->with('success', 'OKR created successfully.');
+    }
+
+    public function edit(Request $request, Okr $okr): View
+    {
+        if ($okr->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $okr->load('keyResults');
+
+        return view('okrs.edit', compact('okr'));
     }
 
     public function update(UpdateOkrRequest $request, Okr $okr, UpdateOkr $action): RedirectResponse
     {
-        $action->execute(
-            $okr->id,
-            $request->validated('title'),
-            (bool) $request->validated('is_active'),
-        );
+        $data = UpdateOkrData::fromRequest($request, $okr->id);
+        $action->execute($data);
 
         return redirect()
             ->route('okrs.index')
-            ->with('success', 'OKR updated.');
+            ->with('success', 'OKR updated successfully.');
     }
 
-    public function destroy(Okr $okr, DeleteOkr $action): RedirectResponse
+    public function toggle(Request $request, Okr $okr, ToggleOkrActive $action): RedirectResponse
     {
-        if ($okr->user_id !== request()->user()->id) {
+        if ($okr->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $action->execute($okr->id);
+
+        $status = $okr->is_active ? 'deactivated' : 'reactivated';
+
+        return redirect()
+            ->route('okrs.index')
+            ->with('success', "OKR {$status}.");
+    }
+
+    public function destroy(Request $request, Okr $okr, DeleteOkr $action): RedirectResponse
+    {
+        if ($okr->user_id !== $request->user()->id) {
             abort(403);
         }
 

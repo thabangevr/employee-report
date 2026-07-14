@@ -56,7 +56,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::middleware('role:manager,ceo')->group(function () {
-        Route::resource('okrs', OkrController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('okrs', OkrController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::patch('okrs/{okr}/toggle', [OkrController::class, 'toggle'])->name('okrs.toggle');
         Route::resource('weekly-submissions', WeeklySubmissionController::class);
         Route::post('/weekly-submissions/{weekly_submission}/submit', [WeeklySubmissionController::class, 'submit'])
             ->name('weekly-submissions.submit');

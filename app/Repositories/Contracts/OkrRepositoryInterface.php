@@ -9,4 +9,6 @@ use Illuminate\Database\Eloquent\Collection;
 interface OkrRepositoryInterface extends BaseRepositoryInterface
 {
     public function findActiveByUser(int $userId): Collection;
+
+    public function findAllByUserWithKeyResults(int $userId): Collection;
 }

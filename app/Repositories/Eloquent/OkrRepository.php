@@ -22,4 +22,14 @@ class OkrRepository extends BaseRepository implements OkrRepositoryInterface
             ->where('is_active', true)
             ->get();
     }
+
+    public function findAllByUserWithKeyResults(int $userId): Collection
+    {
+        return $this->model
+            ->where('user_id', $userId)
+            ->with('keyResults')
+            ->orderByDesc('is_active')
+            ->orderByDesc('created_at')
+            ->get();
+    }
 }
