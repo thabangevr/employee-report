@@ -59,6 +59,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('okrs', OkrController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::patch('okrs/{okr}/toggle', [OkrController::class, 'toggle'])->name('okrs.toggle');
         Route::resource('weekly-submissions', WeeklySubmissionController::class);
+        Route::get('/weekly-submissions/previous-data', [WeeklySubmissionController::class, 'previousData'])
+            ->name('weekly-submissions.previous-data');
+        Route::post('/weekly-submissions/analyze', [WeeklySubmissionController::class, 'analyze'])
+            ->name('weekly-submissions.analyze');
         Route::post('/weekly-submissions/{weekly_submission}/submit', [WeeklySubmissionController::class, 'submit'])
             ->name('weekly-submissions.submit');
     });

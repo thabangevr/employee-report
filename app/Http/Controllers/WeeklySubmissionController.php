@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\WeeklySubmission\AnalyzeSubmissionContent;
 use App\Actions\WeeklySubmission\CreateWeeklySubmission;
 use App\Actions\WeeklySubmission\DeleteWeeklySubmission;
+use App\Actions\WeeklySubmission\GetPreviousSubmissionData;
 use App\Actions\WeeklySubmission\GetWeeklySubmission;
 use App\Actions\WeeklySubmission\SubmitWeeklySubmission;
 use App\Actions\WeeklySubmission\UpdateWeeklySubmission;
 use App\DTOs\WeeklySubmission\CreateWeeklySubmissionData;
 use App\DTOs\WeeklySubmission\UpdateWeeklySubmissionData;
+use App\Http\Requests\AnalyzeSubmissionRequest;
 use App\Http\Requests\StoreWeeklySubmissionRequest;
 use App\Http\Requests\UpdateWeeklySubmissionRequest;
 use App\Models\WeeklySubmission;
 use App\Repositories\Contracts\ManagerAreaRepositoryInterface;
 use App\Repositories\Contracts\OkrRepositoryInterface;
 use App\Repositories\Contracts\WeeklySubmissionRepositoryInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -146,6 +150,28 @@ class WeeklySubmissionController extends Controller
         return redirect()
             ->route('weekly-submissions.index')
             ->with('success', 'Weekly submission deleted.');
+    }
+
+    public function previousData(Request $request, GetPreviousSubmissionData $action): JsonResponse
+    {
+        $data = $action->execute($request->user()->id);
+
+        if (!$data) {
+            return response()->json(['error' => 'No previous submission found.'], 404);
+        }
+
+        return response()->json($data);
+    }
+
+    public function analyze(AnalyzeSubmissionRequest $request, AnalyzeSubmissionContent $action): JsonResponse
+    {
+        try {
+            $result = $action->execute($request->validated('raw_content'));
+
+            return response()->json($result);
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     public function submit(WeeklySubmission $weeklySubmission, SubmitWeeklySubmission $action): RedirectResponse
