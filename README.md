@@ -15,6 +15,7 @@ An internal reporting application where managers submit weekly OKR-aligned updat
 |---|---|
 | Backend | Laravel 10, PHP 8.1+ |
 | Frontend | Blade templates, Alpine.js, Bootstrap 5 |
+| AI | Anthropic Claude SDK (`anthropic-ai/sdk`) for content analysis |
 | Authentication | Azure AD SSO via Laravel Socialite (custom provider) |
 | Database | MySQL |
 | Design System | Custom Everlytic theme (CSS variables) |
@@ -45,6 +46,10 @@ Response <- Controller <- Result <- Action
 - **Employee Dashboard** — Personal OKR view and update history
 
 ### Weekly Submissions
+- **Dual-mode entry** — users choose between two ways to populate their update:
+  - **Paste & Analyze** — paste raw weekly update text and let Claude AI extract areas, statuses, outcomes, priorities, and flags automatically
+  - **Enter Manually** — fill in repeatable form fields directly
+- **Reuse last week** — pre-fills the form with the previous week's structure (area names, cross-team action owners, headline number, OKR focus) while clearing per-week content so users start fresh
 - Structured form with dynamic repeatable sections (areas, outcomes, priorities, flags, cross-team actions)
 - OKR tagging on outcomes and priorities
 - Live word count with colour-coded feedback
@@ -74,6 +79,9 @@ php artisan key:generate
 DB_DATABASE=everlytic_employee_report
 DB_USERNAME=root
 DB_PASSWORD=
+
+# Configure Anthropic API key for AI-assisted submissions
+ANTHROPIC_API_KEY=sk-ant-...
 
 # Configure Azure AD in .env (optional — dev login available)
 AZURE_AD_CLIENT_ID=
